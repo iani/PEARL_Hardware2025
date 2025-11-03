@@ -1,0 +1,82 @@
+# Wearable Sensor Unit Wiring Diagram
+
+direction: right
+
+# Components
+lipo_battery: "3.7V LiPo Battery" {
+  shape: cloud
+}
+
+power_module: "Charger/Boost Module" {
+  shape: rectangle
+  B+: port
+  B-: port
+  OUT+: port
+  OUT-: port
+}
+
+arduino_nano: "Arduino Nano" {
+  shape: rectangle
+  VIN: port
+  GND: port
+  "5V": port
+  "3.3V": port
+  "A4 (SDA)": port
+  "A5 (SCL)": port
+  "D2 (INT)": port
+  "D9 (CE)": port
+  "D10 (CSN)": port
+  "D11 (MOSI)": port
+  "D12 (MISO)": port
+  "D13 (SCK)": port
+}
+
+mpu_6050: "MPU-6050" {
+  shape: rectangle
+  VCC: port
+  GND: port
+  SDA: port
+  SCL: port
+  INT: port
+}
+
+nrf24l01: "nRF24L01+" {
+  shape: rectangle
+  VCC: port
+  GND: port
+  CE: port
+  CSN: port
+  MOSI: port
+  MISO: port
+  SCK: port
+}
+
+
+# Connections
+
+# Power System
+lipo_battery -> power_module."B+" {label: "Red (+)"}
+lipo_battery -> power_module."B-" {label: "Black (-)"}
+power_module."OUT+" -> arduino_nano.VIN {label: "5V OUT"}
+power_module."OUT-" -> arduino_nano.GND
+
+# MPU-6050 (I2C)
+arduino_nano."5V" -> mpu_6050.VCC
+arduino_nano.GND -> mpu_6050.GND
+arduino_nano."A4 (SDA)" -> mpu_6050.SDA
+arduino_nano."A5 (SCL)" -> mpu_6050.SCL
+arduino_nano."D2 (INT)" -> mpu_6050.INT {style.stroke-dash: 4; label: "Optional"}
+
+
+# nRF24L01+ (SPI)
+# Emphasize the 3.3V connection
+arduino_nano."3.3V" -> nrf24l01.VCC {
+    label: "3.3V - IMPORTANT!"
+    style.stroke: red
+}
+arduino_nano.GND -> nrf24l01.GND
+arduino_nano."D9 (CE)" -> nrf24l01.CE
+arduino_nano."D10 (CSN)" -> nrf24l01.CSN
+arduino_nano."D11 (MOSI)" -> nrf24l01.MOSI
+arduino_nano."D12 (MISO)" -> nrf24l01.MISO
+arduino_nano."D13 (SCK)" -> nrf24l01.SCK

@@ -1,0 +1,97 @@
+\documentclass[tikz, border=10pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta, decorations.pathmorphing}
+
+\begin{document}
+\begin{tikzpicture}[
+    auto,
+    node distance=2.5cm and 3.5cm,
+    component/.style={rectangle, draw, minimum height=2cm, minimum width=3cm, text width=3cm, text centered},
+    sensor/.style={component, minimum width=2.5cm},
+    power/.style={component, minimum width=2.5cm},
+    pinlabel/.style={font=\tiny, inner sep=1pt}
+]
+
+% Place components
+\node[component] (arduino) {Arduino Nano};
+\node[sensor, above=of arduino] (mpu) {MPU-6050};
+\node[sensor, below=of arduino] (nrf) {nRF24L01+};
+\node[power, right=of arduino] (power_module) {Charger/Boost Module};
+\node[power, shape=rectangle, draw, right=of power_module] (battery) {LiPo Battery};
+
+% --- PINS (Rearranged for direct connections) ---
+
+% Arduino North Pins (to MPU)
+\node[pinlabel, above=0.1cm of arduino.north] (p_a5) {A5(SCL)};
+\node[pinlabel, above=0.1cm of arduino.north west, anchor=south, xshift=0.5cm] (p_a4) {A4(SDA)};
+\node[pinlabel, above=0.1cm of arduino.north east, anchor=south, xshift=-0.5cm] (p_d2) {D2(INT)};
+
+% MPU South Pins
+\node[pinlabel, below=0.1cm of mpu.south] (p_scl) {SCL};
+\node[pinlabel, below=0.1cm of mpu.south west, anchor=north, xshift=0.5cm] (p_sda) {SDA};
+\node[pinlabel, below=0.1cm of mpu.south east, anchor=north, xshift=-0.5cm] (p_int) {INT};
+\node[pinlabel, left=0.1cm of mpu.west, anchor=east, yshift=0.3cm] (p_mpu_vcc) {VCC};
+\node[pinlabel, left=0.1cm of mpu.west, anchor=east, yshift=-0.3cm] (p_mpu_gnd) {GND};
+
+
+% Arduino South Pins (to nRF)
+\node[pinlabel, below=0.1cm of arduino.south] (p_d11) {D11(MOSI)};
+\node[pinlabel, below=0.1cm of arduino.south west, anchor=north, xshift=0.5cm] (p_d12) {D12(MISO)};
+\node[pinlabel, below=0.1cm of arduino.south east, anchor=north, xshift=-0.5cm] (p_d13) {D13(SCK)};
+\node[pinlabel, below=0.5cm of arduino.south west, anchor=north, xshift=0.5cm] (p_d10) {D10(CSN)};
+\node[pinlabel, below=0.5cm of arduino.south east, anchor=north, xshift=-0.5cm] (p_d9) {D9(CE)};
+
+% nRF North Pins
+\node[pinlabel, above=0.1cm of nrf.north] (p_mosi) {MOSI};
+\node[pinlabel, above=0.1cm of nrf.north west, anchor=south, xshift=0.5cm] (p_miso) {MISO};
+\node[pinlabel, above=0.1cm of nrf.north east, anchor=south, xshift=-0.5cm] (p_sck) {SCK};
+\node[pinlabel, above=0.5cm of nrf.north west, anchor=south, xshift=0.5cm] (p_csn) {CSN};
+\node[pinlabel, above=0.5cm of nrf.north east, anchor=south, xshift=-0.5cm] (p_ce) {CE};
+\node[pinlabel, left=0.1cm of nrf.west, anchor=east, yshift=0.3cm] (p_nrf_vcc) {VCC};
+\node[pinlabel, left=0.1cm of nrf.west, anchor=east, yshift=-0.3cm] (p_nrf_gnd) {GND};
+
+
+% Arduino East Pins (Power etc)
+\node[pinlabel, right=0.1cm of arduino.east, yshift=0.8cm] (p_vin) {VIN};
+\node[pinlabel, right=0.1cm of arduino.east, yshift=0.5cm] (p_gnd1) {GND};
+\node[pinlabel, right=0.1cm of arduino.east, yshift=0.2cm] (p_5v) {5V};
+\node[pinlabel, right=0.1cm of arduino.east, yshift=-0.2cm] (p_3v3) {3.3V};
+
+
+% Power Module Pins
+\node[pinlabel, right=0.1cm of power_module.east, yshift=0.3cm] (p_bplus) {B+};
+\node[pinlabel, right=0.1cm of power_module.east, yshift=-0.3cm] (p_bminus) {B-};
+\node[pinlabel, left=0.1cm of power_module.west, yshift=0.3cm] (p_outplus) {OUT+};
+\node[pinlabel, left=0.1cm of power_module.west, yshift=-0.3cm] (p_outminus) {OUT-};
+
+
+% --- CONNECTIONS (Rerouted) ---
+
+% MPU-6050 (I2C)
+\draw[->] (p_a5.south) -- (p_scl.north);
+\draw[->] (p_a4.south) -- (p_sda.north);
+\draw[->, dashed] (p_d2.south) -- (p_int.north) node[midway, right, font=\tiny] {Opt.};
+
+% nRF24L01+ (SPI)
+\draw[->] (p_d11.north) -- (p_mosi.south);
+\draw[->] (p_d12.north) -- (p_miso.south);
+\draw[->] (p_d13.north) -- (p_sck.south);
+\draw[->] (p_d10.north) -- (p_csn.south);
+\draw[->] (p_d9.north) -- (p_ce.south);
+
+% Power Connections to left column
+\draw[->] (p_5v.east) -| ++(0.5,0) |- (p_mpu_vcc.east);
+\draw[->] (p_gnd1.east) -| ++(0.5,0) |- (p_mpu_gnd.east);
+\draw[->, red, thick] (p_3v3.east) -| ++(0.5,0) |- (p_nrf_vcc.east) node[midway,fill=white,inner sep=1pt] {3.3V!};
+\draw[->] (p_gnd1.east) -| ++(0.5,0) |- (p_nrf_gnd.east);
+
+
+% Power System (Right side)
+\draw[->] (p_outplus.west) -- (p_vin.east);
+\draw[->] (p_outminus.west) -- (p_gnd1.east);
+
+\draw[->, decorate, decoration={snake, amplitude=.4mm, segment length=2mm, post length=1mm}] (battery.west) -- (power_module.east |- p_bplus.east);
+\draw[->, decorate, decoration={snake, amplitude=.4mm, segment length=2mm, post length=1mm}] (battery.west) -- (power_module.east |- p_bminus.east);
+
+\end{tikzpicture}
+\end{document}
